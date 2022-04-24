@@ -22,6 +22,29 @@ def split_pdf(file_origin, new_file, pg_start, pg_end):
 
     return pdf_new
 
+# Get image overview from page break candidate
+def get_pics(p, pg):
+    filepdf = fitz.open(p)
+    page = filepdf[pg-1]
+    image_list = page.getImageList()
+    # printing number of images found in this page
+    if image_list:
+        print(f"[+] Found a total of {len(image_list)} images in page {pg}")
+    else:
+        print("[!] No images found on page", pg)
+    for image_index, img in enumerate(page.getImageList(), start=1):
+        # get the XREF of the image
+        xref = img[0]
+        # extract the image bytes
+        base_image = filepdf.extractImage(xref)
+        image_bytes = base_image["image"]
+        # get the image extension
+        image_ext = base_image["ext"]
+        # load it to PIL
+        image = Image.open(io.BytesIO(image_bytes))
+        # save it to local disk
+        image.save(open(f"image{pg}_{image_index}.{image_ext}", "wb"))
+
 def add_bs_loc_info(p, pg):
     with fitz.open(p) as pdf_doc:
         text = ''
